@@ -64,11 +64,12 @@ alphanum = {alpha}|{num}
 <YYINITIAL>	"-"	{return new Symbol(sym.MINUS);}
 <YYINITIAL>	"*"	{return new Symbol(sym.MUL);}
 <YYINITIAL>	"/"	{return new Symbol(sym.DIV);}
-<YYINITIAL>	"%"	{return new Symbol(sym.MOD);}
-<YYINITIAL>	"="	{return new Symbol(sym.ASSIGN);}
 <YYINITIAL>	"("	{return new Symbol(sym.LPAREN);}
 <YYINITIAL>	")"	{return new Symbol(sym.RPAREN);}
 <YYINITIAL>	","	{return new Symbol(sym.COMMA);}
+<YYINITIAL>	"="	{return new Symbol(sym.EQ);}
+<YYINITIAL> "<" {return new Symbol(sym.LT);}
+<YYINITIAL> ">" {return new Symbol(sym.GT);}
 <YYINITIAL> "not" {return new Symbol(sym.NOT);}
 <YYINITIAL> "and" {return new Symbol(sym.AND);}
 <YYINITIAL> "or" {return new Symbol(sym.OR);}
@@ -91,13 +92,17 @@ alphanum = {alpha}|{num}
 <YYINITIAL> "save" {return new Symbol(sym.SAVE);}
 <YYINITIAL> "restore" {return new Symbol(sym.RESTORE);}
 
-<YYINITIAL>    [0-9]+ {
+<YYINITIAL>    {num}+ {
 	       // INTEGER
 	       return new Symbol(sym.INTEGER, 
-				 new Integer(yytext()));
+                           new Integer(yytext()));
 	       }
 
-<YYINITIAL>    
+<YYINITIAL>    {num}+(\.{num}{num}?)? {
+         // DOUBLE
+         return new Symbol(sym.DOUBLE,
+                           new Double(yytext()));
+         }
 
 <YYINITIAL>    {alpha}{alphanum}* {
 	       // VARIABLE
