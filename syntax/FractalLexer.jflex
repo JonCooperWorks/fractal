@@ -1,11 +1,10 @@
-
-/* Specification for ArithExp tokens */
+package fractal.syntax;
 
 // user customisations
 import java_cup.runtime.*;
 import java.io.IOException;
 
-// Jlex directives
+// JFlex directives
 %%
     
 %cup
@@ -44,11 +43,11 @@ import java.io.IOException;
 %}
 
 
-nl = [\n\r]
+nl = \r|\n|\r\n
 
-cc = ([\b\f]|{nl})
+cc = [\b\f]
 
-ws = {cc}|[\t ]
+ws = {nl}{cc}|[\t ]
 
 alpha = [a-zA-Z_"$""#""?""@""~"]
 
@@ -56,16 +55,21 @@ num = [0-9]
 
 alphanum = {alpha}|{num}
 
+inputchar = [^\r\n]|[^\r]|[^\n]
+
 %%
 
 // Symbols and operators
 <YYINITIAL>	{ws}	{/* ignore whitespace */}
+<YYINITIAL> "//"{inputchar}* {nl} { /* ignore comments */ }
 <YYINITIAL>	"+"	{return new Symbol(sym.PLUS);}
 <YYINITIAL>	"-"	{return new Symbol(sym.MINUS);}
 <YYINITIAL>	"*"	{return new Symbol(sym.MUL);}
 <YYINITIAL>	"/"	{return new Symbol(sym.DIV);}
 <YYINITIAL>	"("	{return new Symbol(sym.LPAREN);}
 <YYINITIAL>	")"	{return new Symbol(sym.RPAREN);}
+<YYINITIAL> "[" {return new Symbol(sym.LBRACE); }
+<YYINITIAL> "]" {return new Symbol(sym.RBRACE); }
 <YYINITIAL>	","	{return new Symbol(sym.COMMA);}
 <YYINITIAL>	"="	{return new Symbol(sym.EQ);}
 <YYINITIAL> "<" {return new Symbol(sym.LT);}
@@ -77,9 +81,12 @@ alphanum = {alpha}|{num}
 <YYINITIAL> "!" {return new Symbol(sym.SEQUENCE);}
 
 // Keywords
-<YYINITIAL> "forward" {return new Symbol(sym.FORWARD);}
-<YYINITIAL> "back" {return new Symbol(sym.BACK);}
-<YYINITIAL> "right" {return new Symbol(sym.RIGHT);}
+<YYINITIAL> "forward|fd" {return new Symbol(sym.FORWARD);}
+<YYINITIAL> "back|bk" {return new Symbol(sym.BACK);}
+<YYINITIAL> "right|rt" {return new Symbol(sym.RIGHT);}
+<YYINITIAL> "left|lt" {return new Symbol(sym.LEFT);}
+<YYINITIAL> "penup|pu" {return new Symbol(sym.PENUP);}
+<YYINITIAL> "pendown|pd" {return new Symbol(sym.PENDOWN);}
 <YYINITIAL> "home" {return new Symbol(sym.HOME);}
 <YYINITIAL> "clear" {return new Symbol(sym.CLEAR);}
 <YYINITIAL> "fractal" {return new Symbol(sym.FRACTAL);}
@@ -99,8 +106,8 @@ alphanum = {alpha}|{num}
 	       }
 
 <YYINITIAL>    {num}+(\.{num}{num}?)? {
-         // DOUBLE
-         return new Symbol(sym.DOUBLE,
+         // REAL
+         return new Symbol(sym.REAL,
                            new Double(yytext()));
          }
 

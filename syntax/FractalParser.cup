@@ -1,113 +1,164 @@
+package fractal.syntax;
+ 
 import java_cup.runtime.*;
 import java.io.*;
 import java.util.*;
-
+import fractal.values.*;
 /* Preliminaries to set up and use the scanner.  */
 parser code {:
-		Lexer lexer;
-
-		public FractalParser(Lexer l) {
-		    // As of CUP v0.11, need to pass Lexer to superclass
-		    super(l);
-		    lexer = l;
-		}
-
-		public void report_error(String message, Object info) {
-		    System.err.println(message);
-		}
-
-		public void syntax_error(Symbol cur_token) {
-		    System.err.print("Line " + lexer.getLine() +
-				     " near char " + lexer.getChar() + ": ");
-		    report_error("Syntax error", cur_token);
-		    System.err.println ("Last token read is " +
-					 lexer.getText());
-		}
+    FractalLexer lexer;
+ 
+    public FractalParser(FractalLexer l) {
+        // As of CUP v0.11, need to pass Lexer to superclass
+        super(l);
+        lexer = l;
+    }
+ 
+    public void report_error(String message, Object info) {
+        System.err.println(message);
+    }
+ 
+    public void syntax_error(Symbol cur_token) {
+        System.err.print("Line " + lexer.getLine() +
+             " near char " + lexer.getChar() + ": ");
+        report_error("Syntax error", cur_token);
+        System.err.println ("Last token read is '" +
+           lexer.getText() + "'");
+    }
 :};
-
+ 
 init with {::};
-
+ 
 scan with {:
-		try {
-		    return lexer.next_token();
-		} catch (java.io.IOException ioe) {
-		    System.out.println ("Unrecognised token");
-		    System.out.println(ioe.getMessage());
-		    throw ioe;
-		}
+    try {
+        return lexer.next_token();
+    } catch (java.io.IOException ioe) {
+        System.out.println ("Unrecognised token");
+        System.out.println(ioe.getMessage());
+        throw ioe;
+    }
 :};
-
+ 
 /* Terminals (tokens returned by the scanner). */
-
+ 
 // keywords
-terminal FORWARD, BACK, RIGHT, HOME, CLEAR, FRACTAL, END, SELF, RENDER, LEVEL,
-         SCALE, DEF, SAVE, RESTORE;
-
+terminal FORWARD, BACK, RIGHT, LEFT, HOME, CLEAR, FRACTAL, END, SELF, RENDER, LEVEL,
+         SCALE, DEF, SAVE, RESTORE, PENUP, PENDOWN;
+ 
 // special symbols
 terminal LPAREN, RPAREN, COMMA, LBRACE, RBRACE;
-
+ 
 // arithmetic operators
-terminal PLUS, MINUS, MUL, DIV, MOD, ASSIGN;
-
+terminal PLUS, MINUS, MUL, DIV;
+ 
 // fractal operators
 terminal COMPOSE, SEQUENCE;
-
+ 
 // boolean operators
 terminal LT, GT, EQ, NOT, AND, OR;
-
+ 
 // terminals with values
 terminal Integer INTEGER;
-terminal Double DOUBLE;
+terminal Double REAL;
 terminal String VARIABLE;
-
+ 
 /* Non terminals */
 nonterminal ASTProgram program;
 nonterminal ASTStmtSequence stmtList;
 nonterminal ASTStatement stmt;
 nonterminal ASTDefine definition;
-nonterminal ArrayList<ASTExp> expList;
-nonterminal ASTExp expression;
+nonterminal ArrayList<ASTStatement> fracBody;
+nonterminal ASTFracExp fracExp;
+nonterminal ASTExp arithExp;
 nonterminal ASTExp term;
 nonterminal ASTExp factor;
-
+nonterminal ASTFracVar fracVar;
+nonterminal ASTFracExp fractal;
+ 
+/* Statements */
+nonterminal ASTSaveStmt saveStmt;
+nonterminal ASTRestoreStmt restoreStmt;
+ 
+/* Commands */
+nonterminal ASTSelf self;
+nonterminal ASTSetLevel setLevel;
+nonterminal ASTSetScale setScale;
+nonterminal ASTTCmdRight rightCmd;
+nonterminal ASTTCmdLeft leftCmd;
+ 
+/* Statements */
+nonterminal ASTRender renderCmd;
+nonterminal ASTTCmdPenDown pendownCmd;
+nonterminal ASTTCmdPenUp penupCmd;
+nonterminal ASTTCmdHome homeCmd;
+nonterminal ASTTCmdBack backCmd;
+nonterminal ASTTCmdForward forwardCmd;
+nonterminal ASTTCmdClear clearCmd;
+ 
+ 
 program ::= stmtList:s {: RESULT = new ASTProgram(s); :};
-
+ 
 stmtList ::= stmtList:lst stmt:s {:
-		lst.add(s); 
-		RESULT = lst;
-		:} |
-	     stmt:s {:
-		RESULT = new ASTStmtSequence(s);
-		:};
-
+                 lst.add(s); 
+                 RESULT = lst;
+             :} |
+             stmt:s {: RESULT = new ASTStmtSequence(s); :};
+ 
 stmt ::= definition:d {: RESULT = d; :} |
-	 expression:e {: RESULT = new ASTStatement(e); :};
-
-definition ::= VARIABLE:v ASSIGN expression:e {:
-		   RESULT = new ASTStmtDefinition(v, e);
-		:};
-
-expList ::= expList:lst COMMA expression:e {:
-	        lst.add(e);
-	    	RESULT = lst;
-	    :}|
-	    expression:e {:
-	        ArrayList<ASTExp> lst = new ArrayList<ASTExp>();
-		lst.add(e);
-	    	RESULT = lst;
-	    :};
-
-expression ::= 	expression:e PLUS term:t {:
-			RESULT = new ASTExpAdd(e, t); :} |
-		expression:e MINUS term:t {:
-			RESULT = new ASTExpSub(e, t); :} |
-		term:t {: RESULT = t; :};
-
-term ::= term:t MUL factor:f {:
-		RESULT = new ASTExpMul(t, f); :} |
-	 term:t DIV factor:f {:
-		RESULT = new ASTExpDiv(t, f); :}; 
-
-factor ::= INTEGER:ilit {: RESULT = new ASTExpLit(ilit); :} |
-	   VARIABLE:var {: RESULT = new ASTExpVar(var); :} |
-	   LPAREN expression:e RPAREN {: RESULT = e; :};
+         fracExp:f {: RESULT = f; :};
+ 
+definition ::= DEF VARIABLE:v fractal:f {: RESULT = new ASTDefine(v, f); :};
+ 
+fractal ::= FRACTAL fracBody:b END {: RESULT = new ASTFractal(b); :};
+ 
+fracBody ::= fracExp:f fracBody:b {:
+                 b.add(f);
+                 RESULT = b;
+             :} |
+             fracExp:f {: 
+                 ArrayList<ASTStatement> body = new ArrayList<ASTStatement>();
+                 body.add(f);
+                 RESULT = body;
+             :};
+ 
+fracExp ::= clearCmd | homeCmd | forwardCmd |
+            backCmd | penupCmd | pendownCmd | 
+            rightCmd | leftCmd | self | fracVar
+            | renderCmd;
+            
+fracVar ::= VARIABLE:v {: RESULT = new ASTFracVar(v); :};
+ 
+arithExp ::= arithExp:e PLUS term:t {: RESULT = new ASTExpAdd(e, t); :} |
+             arithExp:e MINUS term:t {: RESULT = new ASTExpSub(e, t); :} |
+             term:t {: RESULT = t; :};
+ 
+term ::= term:t MUL factor:f {: RESULT = new ASTExpMul(t, f); :} |
+         term:t DIV factor:f {: RESULT = new ASTExpDiv(t, f); :} |
+         factor:f {: RESULT = f; :};
+ 
+factor ::= INTEGER:ilit {: RESULT = new ASTExpLit(FractalValue.make(ilit)); :} |
+           REAL:rlit {: RESULT = new ASTExpLit(FractalValue.make(rlit)); :} |
+           VARIABLE:var {: RESULT = new ASTExpVar(var); :} |
+           LPAREN arithExp:e RPAREN  {: RESULT = e; :};
+ 
+self ::= SELF LPAREN arithExp:e RPAREN {: RESULT = new ASTSelf(e); :};
+ 
+rightCmd ::= RIGHT LPAREN arithExp:e RPAREN {: RESULT = new ASTTCmdRight(e); :};
+ 
+leftCmd ::= LEFT LPAREN arithExp:e RPAREN {: RESULT = new ASTTCmdLeft(e); :};
+ 
+forwardCmd ::= FORWARD LPAREN arithExp:e RPAREN {: RESULT = new ASTTCmdForward(e); :};
+ 
+backCmd ::= BACK LPAREN arithExp:e RPAREN {: RESULT = new ASTTCmdBack(e); :};
+ 
+pendownCmd ::= PENDOWN LPAREN RPAREN {: RESULT = new ASTTCmdPenDown(); :};
+ 
+penupCmd ::= PENUP LPAREN RPAREN {: RESULT = new ASTTCmdPenUp(); :};
+ 
+homeCmd ::= HOME LPAREN RPAREN {: RESULT = new ASTTCmdHome(); :};
+ 
+clearCmd ::= CLEAR LPAREN RPAREN {: RESULT = new ASTTCmdClear(); :};
+ 
+renderCmd ::= RENDER LBRACE arithExp:lvl COMMA arithExp:len RBRACE fracVar:f {:
+                  RESULT = new ASTRender(lvl, len, f); :} |
+              RENDER fracVar:f {: RESULT = new ASTRender(f); :};
