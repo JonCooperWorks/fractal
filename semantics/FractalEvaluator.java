@@ -112,7 +112,10 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTTCmdForward(ASTTCmdForward form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      FractalValue distVal = form.getLength().visit(this, state);
+      Double dist = distVal.realValue() * state.getDefaultScale();
+      state.getTurtleState().displace(dist);
+      return FractalValue.NO_VALUE;
     }
 
     @Override

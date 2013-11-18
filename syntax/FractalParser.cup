@@ -44,6 +44,7 @@ scan with {:
 // keywords
 terminal FORWARD, BACK, RIGHT, LEFT, HOME, CLEAR, FRACTAL, END, SELF, RENDER, LEVEL,
          SCALE, DEF, SAVE, RESTORE, PENUP, PENDOWN;
+
  
 // special symbols
 terminal LPAREN, RPAREN, COMMA, LBRACE, RBRACE;
@@ -67,6 +68,7 @@ nonterminal ASTProgram program;
 nonterminal ASTStmtSequence stmtList;
 nonterminal ASTStatement stmt;
 nonterminal ASTDefine definition;
+nonterminal ASTTurtleCmd turtleCmd;
 nonterminal ArrayList<ASTStatement> fracBody;
 nonterminal ASTFracExp fracExp;
 nonterminal ASTExp arithExp;
@@ -78,24 +80,24 @@ nonterminal ASTFracExp fractal;
 /* Statements */
 nonterminal ASTSaveStmt saveStmt;
 nonterminal ASTRestoreStmt restoreStmt;
+nonterminal ASTSetLevel levelStmt;
+nonterminal ASTSetScale scaleStmt;
  
 /* Commands */
 nonterminal ASTSelf self;
-nonterminal ASTSetLevel setLevel;
-nonterminal ASTSetScale setScale;
 nonterminal ASTTCmdRight rightCmd;
-nonterminal ASTTCmdLeft leftCmd;
+nonterminal ASTTurtleCmd leftCmd;
  
 /* Statements */
-nonterminal ASTRender renderCmd;
-nonterminal ASTTCmdPenDown pendownCmd;
-nonterminal ASTTCmdPenUp penupCmd;
-nonterminal ASTTCmdHome homeCmd;
-nonterminal ASTTCmdBack backCmd;
-nonterminal ASTTCmdForward forwardCmd;
-nonterminal ASTTCmdClear clearCmd;
+nonterminal ASTRender renderStmt;
+nonterminal ASTTurtleCmd pendownCmd;
+nonterminal ASTTurtleCmd penupCmd;
+nonterminal ASTTurtleCmd homeCmd;
+nonterminal ASTTurtleCmd backCmd;
+nonterminal ASTTurtleCmd forwardCmd;
+nonterminal ASTTurtleCmd clearCmd;
  
- 
+
 program ::= stmtList:s {: RESULT = new ASTProgram(s); :};
  
 stmtList ::= stmtList:lst stmt:s {:
@@ -104,9 +106,22 @@ stmtList ::= stmtList:lst stmt:s {:
              :} |
              stmt:s {: RESULT = new ASTStmtSequence(s); :};
  
-stmt ::= definition:d {: RESULT = d; :} |
-         fracExp:f {: RESULT = f; :};
+stmt ::= definition | turtleCmd | fractal
+         restoreStmt | saveStmt |  levelStmt
+         scaleStmt | fracVar | renderStmt;
+
+restoreStmt ::= RESTORE {: RESULT = new ASTRestoreStmt(); :}; 
+
+saveStmt ::= SAVE {: RESULT = new ASTSaveStmt(); :};
+
+levelStmt ::= LEVEL arithExp:e {: RESULT = new ASTSetLevel(e); :};
  
+renderStmt ::= RENDER LBRACE arithExp:lvl COMMA arithExp:len RBRACE VARIABLE:v {:
+                  RESULT = new ASTRender(lvl, len, new ASTFracVar(v)); :} |
+              RENDER VARIABLE:v {: RESULT = new ASTRender(new ASTFracVar(v)); :};
+
+scaleStmt ::= SCALE arithExp:e {: RESULT = new ASTSetScale(e); :};
+
 definition ::= DEF VARIABLE:v fractal:f {: RESULT = new ASTDefine(v, f); :};
  
 fractal ::= FRACTAL fracBody:b END {: RESULT = new ASTFractal(b); :};
@@ -121,10 +136,11 @@ fracBody ::= fracExp:f fracBody:b {:
                  RESULT = body;
              :};
  
-fracExp ::= clearCmd | homeCmd | forwardCmd |
-            backCmd | penupCmd | pendownCmd | 
-            rightCmd | leftCmd | self | fracVar
-            | renderCmd;
+turtleCmd ::= clearCmd | homeCmd | forwardCmd |
+              backCmd | penupCmd | pendownCmd | 
+              rightCmd | leftCmd;
+
+fracExp ::= self | stmt;
             
 fracVar ::= VARIABLE:v {: RESULT = new ASTFracVar(v); :};
  
@@ -158,7 +174,3 @@ penupCmd ::= PENUP LPAREN RPAREN {: RESULT = new ASTTCmdPenUp(); :};
 homeCmd ::= HOME LPAREN RPAREN {: RESULT = new ASTTCmdHome(); :};
  
 clearCmd ::= CLEAR LPAREN RPAREN {: RESULT = new ASTTCmdClear(); :};
- 
-renderCmd ::= RENDER LBRACE arithExp:lvl COMMA arithExp:len RBRACE fracVar:f {:
-                  RESULT = new ASTRender(lvl, len, f); :} |
-              RENDER fracVar:f {: RESULT = new ASTRender(f); :};
