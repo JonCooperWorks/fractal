@@ -50,7 +50,7 @@ terminal FORWARD, BACK, RIGHT, LEFT, HOME, CLEAR, FRACTAL, END, SELF, RENDER, LE
 terminal LPAREN, RPAREN, COMMA, LBRACE, RBRACE;
  
 // arithmetic operators
-terminal PLUS, MINUS, MUL, DIV;
+terminal PLUS, MINUS, MUL, DIV, MOD;
  
 // fractal operators
 terminal COMPOSE, SEQUENCE;
@@ -150,6 +150,7 @@ arithExp ::= arithExp:e PLUS term:t {: RESULT = new ASTExpAdd(e, t); :} |
  
 term ::= term:t MUL factor:f {: RESULT = new ASTExpMul(t, f); :} |
          term:t DIV factor:f {: RESULT = new ASTExpDiv(t, f); :} |
+         term:t MOD factor:f {: RESULT = new ASTExpMod(t, f); :} |
          factor:f {: RESULT = f; :};
  
 factor ::= INTEGER:ilit {: RESULT = new ASTExpLit(FractalValue.make(ilit)); :} |

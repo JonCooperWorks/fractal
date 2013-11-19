@@ -43,30 +43,29 @@ import java.io.IOException;
     }
 %}
  
- nl = [\n\r]
+ nl = [\n\r]|\r\n
  
 cc = ([\b\f]|{nl})
  
 ws = {cc}|[\t ]
  
 alpha = [a-zA-Z_"$""#""?""@""~"]
+
+num = [0-9]
  
-alphanum = {alpha}|[0-9]
+alphanum = {alpha}|{num}
  
-validComment = [^\r]|[^\n]|[^\n\r]
+validComment = [^\r\n]
  
 %%
  
 <YYINITIAL> {ws}  {/* ignore whitespace */}
-<YYINITIAL> {cc}  {
-                        //skip newline, but reset char counter
-      yychar = 0;
-      }
 <YYINITIAL> "//"{validComment}* {nl} { /* ignore comments */ }
 <YYINITIAL> "+" {return new Symbol(sym.PLUS);}
 <YYINITIAL> "-" {return new Symbol(sym.MINUS);}
 <YYINITIAL> "*" {return new Symbol(sym.MUL);}
 <YYINITIAL> "/" {return new Symbol(sym.DIV);}
+<YYINITIAL> "%" {return new Symbol(sym.MOD);}
 <YYINITIAL> "=" {return new Symbol(sym.EQ);}
  
 <YYINITIAL> "<" {return new Symbol(sym.LT);}
@@ -106,19 +105,19 @@ validComment = [^\r]|[^\n]|[^\n\r]
 <YYINITIAL> "end"   {return new Symbol(sym.END);}
  
  
-<YYINITIAL>    [0-9]+ {
+<YYINITIAL>    {num}+ {
          // INTEGER
          return new Symbol(sym.INTEGER, 
          new Integer(yytext()));
          }
  
-<YYINITIAL>    {alpha}({alpha}|[0-9])* {
+<YYINITIAL>    {alpha}({alphanum})* {
          // VARIABLE
          return new Symbol(sym.VARIABLE, yytext());
          }
  
-<YYINITIAL>    [0-9]+(\.[0-9][0-9]?)? {
+<YYINITIAL>   {num}*\.{num}+ {
          // REAL
          return new Symbol(sym.REAL, 
-         new Integer(yytext()));
+         new Double(yytext()));
          }

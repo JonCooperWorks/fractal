@@ -4,7 +4,9 @@
  */
 package fractal.semantics;
 
+import fractal.syntax.ASTStatement;
 import fractal.syntax.ASTDefine;
+import fractal.syntax.ASTExp;
 import fractal.syntax.ASTExpAdd;
 import fractal.syntax.ASTExpDiv;
 import fractal.syntax.ASTExpLit;
@@ -42,7 +44,11 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTStmtSequence(ASTStmtSequence seq, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      for(ASTStatement statement: seq.getSeq()) {
+        statement.visit(this, state);
+      }
+
+      return FractalValue.NO_VALUE;
     }
 
     @Override
@@ -120,7 +126,10 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTTCmdBack(ASTTCmdBack form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      FractalValue distVal = form.getLength().visit(this, state);
+      Double dist = distVal.realValue() * state.getDefaultScale();
+      state.getTurtleState().displace(-1 * dist);
+      return FractalValue.NO_VALUE;
     }
 
     @Override
@@ -145,32 +154,42 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTExpAdd(ASTExpAdd form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      FractalValue first = form.getFirst().visit(this, state);
+      FractalValue second = form.getSecond().visit(this, state);
+      return first.add(second);
     }
 
     @Override
     public FractalValue visitASTExpSub(ASTExpSub form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      FractalValue first = form.getFirst().visit(this, state);
+      FractalValue second = form.getSecond().visit(this, state);
+      return first.sub(second);
     }
 
     @Override
     public FractalValue visitASTExpMul(ASTExpMul form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      FractalValue first = form.getFirst().visit(this, state);
+      FractalValue second = form.getSecond().visit(this, state);
+      return first.mul(second);
     }
 
     @Override
     public FractalValue visitASTExpDiv(ASTExpDiv form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      FractalValue first = form.getFirst().visit(this, state);
+      FractalValue second = form.getSecond().visit(this, state);
+      return first.div(second);
     }
 
     @Override
     public FractalValue visitASTExpMod(ASTExpMod form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      FractalValue first = form.getFirst().visit(this, state);
+      FractalValue second = form.getSecond().visit(this, state);
+      return first.mod(second);
     }
 
     @Override
     public FractalValue visitASTExpLit(ASTExpLit form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      return form.getValue();
     }
 
     @Override
