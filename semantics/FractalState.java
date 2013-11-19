@@ -79,8 +79,8 @@ public class FractalState {
 //        if (oldState.isPenDown() && (sx != dx || sy != dy)) {
 //            display.drawSegment(sx, sy, dx, dy);
 //        }
-//        this.turtleState = newState;
-//        updateDisplay();
+        this.turtleState = newState;
+        updateDisplay();
     }
     
     protected void updateDisplay() {

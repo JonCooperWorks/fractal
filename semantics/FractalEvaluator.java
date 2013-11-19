@@ -4,6 +4,9 @@
  */
 package fractal.semantics;
 
+import java.util.EmptyStackException;
+import fractal.sys.FractalRestoreException;
+import cs34q.turtle.Turtle;
 import fractal.syntax.ASTStatement;
 import fractal.syntax.ASTDefine;
 import fractal.syntax.ASTExp;
@@ -53,12 +56,22 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTSaveStmt(ASTSaveStmt form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      state.pushTurtle();
+      return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTRestoreStmt(ASTRestoreStmt form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      try {
+        state.popTurtle();
+      }
+
+      catch (EmptyStackException e) {
+        throw new FractalRestoreException(); 
+      }
+
+      return FractalValue.NO_VALUE;
+
     }
 
     @Override
@@ -134,12 +147,16 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTTCmdPenDown(ASTTCmdPenDown form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      Turtle turtle = state.getTurtleState();
+      state.setTurtleState(new Turtle(turtle.getX(), turtle.getY(), turtle.getBearingInDegs(), true));
+      return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTTCmdPenUp(ASTTCmdPenUp form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      Turtle turtle = state.getTurtleState();
+      state.setTurtleState(new Turtle(turtle.getX(), turtle.getY(), turtle.getBearingInDegs(), true));
+      return FractalValue.NO_VALUE;
     }
 
     @Override
