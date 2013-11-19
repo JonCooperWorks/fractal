@@ -81,12 +81,24 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTSetLevel(ASTSetLevel form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      ASTExp levelExp = form.getLevel();
+      FractalValue levelVal = levelExp.visit(this, state);
+      int level = levelVal.intValue();
+
+      state.setDefaultLevel(level);
+
+      return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTSetScale(ASTSetScale form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      ASTExp scaleExp = form.getScale();
+      FractalValue scaleVal = scaleExp.visit(this, state);
+      int scale = scaleVal.intValue();
+
+      state.setDefaultScale(scale);
+
+      return FractalValue.NO_VALUE;
     }
 
     @Override
