@@ -20,6 +20,7 @@ import fractal.syntax.ASTExpVar;
 import fractal.syntax.ASTFracCompose;
 import fractal.syntax.ASTFracSequence;
 import fractal.syntax.ASTFracVar;
+import fractal.syntax.ASTFracExp;
 import fractal.syntax.ASTFractal;
 import fractal.syntax.ASTRender;
 import fractal.syntax.ASTRestoreStmt;
@@ -47,21 +48,26 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTStmtSequence(ASTStmtSequence seq, FractalState state) throws FractalException {
-      for(ASTStatement statement: seq.getSeq()) {
-        statement.visit(this, state);
-      }
+        System.out.println("StmtSequence");
 
-      return FractalValue.NO_VALUE;
+        state.updateDisplay();
+
+        for(ASTStatement stmt: seq.getSeq()) {
+          stmt.visit(this, state);
+        }
+        return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTSaveStmt(ASTSaveStmt form, FractalState state) throws FractalException {
+      System.out.println("SaveStmt");
       state.pushTurtle();
       return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTRestoreStmt(ASTRestoreStmt form, FractalState state) throws FractalException {
+      System.out.println("RestoreStmt");
       try {
         state.popTurtle();
       }
@@ -76,34 +82,54 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTRender(ASTRender form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      System.out.println("Render");
+      ASTExp levelExp = form.getLevel();
+      ASTExp scaleExp = form.getScale();
+      ASTFracExp fracExp = form.getFractal();
+
+      double level, scale;
+
+      if (levelExp == null || scaleExp == null) {
+        level = 9;
+        scale = 100;
+      }
+
+      else {
+        level = levelExp.visit(this, state).realValue();
+        scale = scaleExp.visit(this, state).realValue();
+      }
+
+      
+      return fracExp.visit(this, state);
     }
 
     @Override
     public FractalValue visitASTSetLevel(ASTSetLevel form, FractalState state) throws FractalException {
+      System.out.println("Level");
       ASTExp levelExp = form.getLevel();
       FractalValue levelVal = levelExp.visit(this, state);
       int level = levelVal.intValue();
-
       state.setDefaultLevel(level);
-
       return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTSetScale(ASTSetScale form, FractalState state) throws FractalException {
+      System.out.println("Scale");
       ASTExp scaleExp = form.getScale();
       FractalValue scaleVal = scaleExp.visit(this, state);
       int scale = scaleVal.intValue();
-
       state.setDefaultScale(scale);
-
       return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTDefine(ASTDefine form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      System.out.println("Define");
+      Environment current = state.getEnvironment();
+      FractalValue value = form.getValueExp().visit(this, state);
+      current.put(form.getVar(), value);
+      return value;
     }
 
     @Override
@@ -118,31 +144,50 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTFracVar(ASTFracVar form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      System.out.println("Fracvar");
+      Environment current = state.getEnvironment();
+      return current.get(form.getVar());
     }
 
     @Override
     public FractalValue visitASTFractal(ASTFractal form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      System.out.println("Fractal");
+      for (ASTStatement stmt: form.getBody()) {
+        stmt.visit(this, state);
+      }
+
+      return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTSelf(ASTSelf form, FractalState state) throws FractalException {
+      System.out.println("Self");
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public FractalValue visitASTTCmdLeft(ASTTCmdLeft form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      System.out.println("Left");
+      Turtle turtle = state.getTurtleState();
+      FractalValue angleVal = form.visit(this, state);
+      double angle = angleVal.realValue();
+      turtle.deriveTurned(-1 * angle);
+      return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTTCmdRight(ASTTCmdRight form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      System.out.println("Right");
+      Turtle turtle = state.getTurtleState();
+      FractalValue angleVal = form.visit(this, state);
+      double angle = angleVal.realValue();
+      turtle.deriveTurned(angle);
+      return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTTCmdForward(ASTTCmdForward form, FractalState state) throws FractalException {
+      System.out.println("Forward");
       FractalValue distVal = form.getLength().visit(this, state);
       Double dist = distVal.realValue() * state.getDefaultScale();
       state.getTurtleState().displace(dist);
@@ -151,6 +196,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTTCmdBack(ASTTCmdBack form, FractalState state) throws FractalException {
+      System.out.println("Back");
       FractalValue distVal = form.getLength().visit(this, state);
       Double dist = distVal.realValue() * state.getDefaultScale();
       state.getTurtleState().displace(-1 * dist);
@@ -159,6 +205,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTTCmdPenDown(ASTTCmdPenDown form, FractalState state) throws FractalException {
+      System.out.println("Pendown");
       Turtle turtle = state.getTurtleState();
       state.setTurtleState(new Turtle(turtle.getX(), turtle.getY(), turtle.getBearingInDegs(), true));
       return FractalValue.NO_VALUE;
@@ -166,6 +213,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTTCmdPenUp(ASTTCmdPenUp form, FractalState state) throws FractalException {
+      System.out.println("Penup");
       Turtle turtle = state.getTurtleState();
       state.setTurtleState(new Turtle(turtle.getX(), turtle.getY(), turtle.getBearingInDegs(), true));
       return FractalValue.NO_VALUE;
@@ -173,16 +221,22 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTTCmdClear(ASTTCmdClear form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      System.out.println("Clear");
+      state.getDisplay().clear();
+      return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTTCmdHome(ASTTCmdHome form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      System.out.println("Home");
+      Turtle turtle = state.getTurtleState();
+      turtle.home();
+      return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTExpAdd(ASTExpAdd form, FractalState state) throws FractalException {
+      System.out.println("Add");
       FractalValue first = form.getFirst().visit(this, state);
       FractalValue second = form.getSecond().visit(this, state);
       return first.add(second);
@@ -190,6 +244,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTExpSub(ASTExpSub form, FractalState state) throws FractalException {
+      System.out.println("Sub");
       FractalValue first = form.getFirst().visit(this, state);
       FractalValue second = form.getSecond().visit(this, state);
       return first.sub(second);
@@ -197,6 +252,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTExpMul(ASTExpMul form, FractalState state) throws FractalException {
+      System.out.println("Mul");
       FractalValue first = form.getFirst().visit(this, state);
       FractalValue second = form.getSecond().visit(this, state);
       return first.mul(second);
@@ -204,6 +260,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTExpDiv(ASTExpDiv form, FractalState state) throws FractalException {
+      System.out.println("Div");
       FractalValue first = form.getFirst().visit(this, state);
       FractalValue second = form.getSecond().visit(this, state);
       return first.div(second);
@@ -211,6 +268,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTExpMod(ASTExpMod form, FractalState state) throws FractalException {
+      System.out.println("Mod");
       FractalValue first = form.getFirst().visit(this, state);
       FractalValue second = form.getSecond().visit(this, state);
       return first.mod(second);
@@ -218,12 +276,15 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTExpLit(ASTExpLit form, FractalState state) throws FractalException {
+      System.out.println("Lit");
       return form.getValue();
     }
 
     @Override
     public FractalValue visitASTExpVar(ASTExpVar form, FractalState state) throws FractalException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      System.out.println("Var");
+      Environment current = state.getEnvironment();
+      return current.get(form.getVar());
     }
     
 }
