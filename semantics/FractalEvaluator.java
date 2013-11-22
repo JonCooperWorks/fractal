@@ -84,16 +84,15 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
       System.out.print(form);
       ASTExp levelExp = form.getLevel();
       ASTExp scaleExp = form.getScale();
-      ASTFracExp fracExp = form.getFractal();
+      Fractal fractal = (Fractal)form.getFractal().visit(this, state);
 
       double scale, oldScale;
       int level, oldLevel;
 
-      if (levelExp == null || scaleExp == null) {
+      if(levelExp == null || scaleExp == null) {
         level = 9;
         scale = 100;
       }
-
       else {
         level = levelExp.visit(this, state).intValue();
         scale = scaleExp.visit(this, state).realValue();
@@ -101,12 +100,20 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
       oldLevel = state.getDefaultLevel();
       oldScale = state.getDefaultScale();
-
-      FractalValue value = fracExp.visit(this, state);
-
+      
       state.setDefaultLevel(level);
       state.setDefaultScale(scale);
-      return value;
+
+      for(ASTStatement stmt: fractal.getBody().getSeq()) {
+        stmt.visit(this, state);
+      }
+      
+      state.updateDisplay();
+
+      state.setDefaultLevel(oldLevel);
+      state.setDefaultScale(oldScale);
+
+      return FractalValue.NO_VALUE;
     }
 
     @Override
@@ -133,7 +140,8 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
     public FractalValue visitASTDefine(ASTDefine form, FractalState state) throws FractalException {
       System.out.print(form);
       Environment current = state.getEnvironment();
-      FractalValue value = form.getValueExp().visit(this, state);
+      ASTFractal fractal = (ASTFractal)form.getValueExp();
+      Fractal value = new Fractal(fractal.getBody());
       current.put(form.getVar(), value);
       return value;
     }

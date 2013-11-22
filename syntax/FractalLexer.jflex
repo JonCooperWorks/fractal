@@ -106,7 +106,7 @@ validComment = [^\r\n]
          new Integer(yytext()));
          }
  
-<YYINITIAL>    {alpha}({alphanum})* {
+<YYINITIAL>    {alpha}{alphanum}* {
          // VARIABLE
          return new Symbol(sym.VARIABLE, yytext());
          }

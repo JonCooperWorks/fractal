@@ -106,11 +106,11 @@ stmtList ::= stmtList:lst stmt:s {:
              :} |
              stmt:s {: RESULT = new ASTStmtSequence(s); :};
  
-stmt ::= definition:d {: RESULT = d; :}| turtleCmd:t {: RESULT = t; :}| fractal:fr {: RESULT = fr; :}
-         restoreStmt:rst {: RESULT = rst; :}| saveStmt:sv {: RESULT = sv; :} |  levelStmt:ls {: RESULT = ls; :}
+stmt ::= definition:d {: RESULT = d; :} | turtleCmd:t {: RESULT = t; :}| fractal:fr {: RESULT = fr; :} |
+         restoreStmt:rst {: RESULT = rst; :} | saveStmt:sv {: RESULT = sv; :} |  levelStmt:ls {: RESULT = ls; :} |
          scaleStmt:ss {: RESULT = ss; :} | renderStmt:rs {: RESULT = rs; :};
 
-restoreStmt ::= RESTORE {: RESULT = new ASTRestoreStmt(); :}; 
+restoreStmt ::= RESTORE {: RESULT = new ASTRestoreStmt(); :};
 
 saveStmt ::= SAVE {: RESULT = new ASTSaveStmt(); :};
 
