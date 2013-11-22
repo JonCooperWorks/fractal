@@ -86,4 +86,9 @@ public class FractalInt extends FractalValue {
             return new FractalReal(realValue() % val.realValue());
         }
     }
+
+    @Override
+    public String toString() {
+      return String.valueOf(this.value);
+    }
 }

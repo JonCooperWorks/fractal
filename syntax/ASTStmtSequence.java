@@ -17,7 +17,7 @@ public class ASTStmtSequence extends ASTStatement {
     }
 
     public ASTStmtSequence(ASTStatement s) {
-	this();
+      this();
 	seq.add(s);
     }
 

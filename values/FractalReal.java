@@ -78,4 +78,9 @@ public class FractalReal extends FractalValue {
             throw new FractalTypeException(FractalTypes.REAL, val.getType());
         }
     }
+
+    @Override
+    public String toString() {
+      return String.valueOf(this.value);
+    }
 }

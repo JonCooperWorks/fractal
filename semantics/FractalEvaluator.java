@@ -39,6 +39,7 @@ import fractal.syntax.ASTTCmdPenUp;
 import fractal.syntax.ASTTCmdRight;
 import fractal.sys.FractalException;
 import fractal.values.FractalValue;
+import fractal.values.Fractal;
 
 /**
  *
@@ -48,8 +49,6 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTStmtSequence(ASTStmtSequence seq, FractalState state) throws FractalException {
-        System.out.println("StmtSequence");
-
         state.updateDisplay();
 
         for(ASTStatement stmt: seq.getSeq()) {
@@ -60,14 +59,14 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTSaveStmt(ASTSaveStmt form, FractalState state) throws FractalException {
-      System.out.println("SaveStmt");
+      System.out.print(form);
       state.pushTurtle();
       return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTRestoreStmt(ASTRestoreStmt form, FractalState state) throws FractalException {
-      System.out.println("RestoreStmt");
+      System.out.print(form);
       try {
         state.popTurtle();
       }
@@ -82,12 +81,13 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTRender(ASTRender form, FractalState state) throws FractalException {
-      System.out.println("Render");
+      System.out.print(form);
       ASTExp levelExp = form.getLevel();
       ASTExp scaleExp = form.getScale();
       ASTFracExp fracExp = form.getFractal();
 
-      double level, scale;
+      double scale, oldScale;
+      int level, oldLevel;
 
       if (levelExp == null || scaleExp == null) {
         level = 9;
@@ -95,17 +95,23 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
       }
 
       else {
-        level = levelExp.visit(this, state).realValue();
+        level = levelExp.visit(this, state).intValue();
         scale = scaleExp.visit(this, state).realValue();
       }
 
-      
-      return fracExp.visit(this, state);
+      oldLevel = state.getDefaultLevel();
+      oldScale = state.getDefaultScale();
+
+      FractalValue value = fracExp.visit(this, state);
+
+      state.setDefaultLevel(level);
+      state.setDefaultScale(scale);
+      return value;
     }
 
     @Override
     public FractalValue visitASTSetLevel(ASTSetLevel form, FractalState state) throws FractalException {
-      System.out.println("Level");
+      System.out.print(form);
       ASTExp levelExp = form.getLevel();
       FractalValue levelVal = levelExp.visit(this, state);
       int level = levelVal.intValue();
@@ -115,7 +121,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTSetScale(ASTSetScale form, FractalState state) throws FractalException {
-      System.out.println("Scale");
+      System.out.print(form);
       ASTExp scaleExp = form.getScale();
       FractalValue scaleVal = scaleExp.visit(this, state);
       int scale = scaleVal.intValue();
@@ -125,7 +131,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTDefine(ASTDefine form, FractalState state) throws FractalException {
-      System.out.println("Define");
+      System.out.print(form);
       Environment current = state.getEnvironment();
       FractalValue value = form.getValueExp().visit(this, state);
       current.put(form.getVar(), value);
@@ -144,50 +150,45 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTFracVar(ASTFracVar form, FractalState state) throws FractalException {
-      System.out.println("Fracvar");
+      System.out.print(form);
       Environment current = state.getEnvironment();
       return current.get(form.getVar());
     }
 
     @Override
     public FractalValue visitASTFractal(ASTFractal form, FractalState state) throws FractalException {
-      System.out.println("Fractal");
-      for (ASTStatement stmt: form.getBody()) {
-        stmt.visit(this, state);
-      }
-
-      return FractalValue.NO_VALUE;
+      System.out.print(form);
+      Fractal fractal = new Fractal(form.getBody());
+      return fractal;
     }
 
     @Override
     public FractalValue visitASTSelf(ASTSelf form, FractalState state) throws FractalException {
-      System.out.println("Self");
+      System.out.print(form);
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public FractalValue visitASTTCmdLeft(ASTTCmdLeft form, FractalState state) throws FractalException {
-      System.out.println("Left");
-      Turtle turtle = state.getTurtleState();
-      FractalValue angleVal = form.visit(this, state);
+      System.out.print(form);
+      FractalValue angleVal = form.getAngle().visit(this, state);
       double angle = angleVal.realValue();
-      turtle.deriveTurned(-1 * angle);
+      state.getTurtleState().turn(-1 * angle);
       return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTTCmdRight(ASTTCmdRight form, FractalState state) throws FractalException {
-      System.out.println("Right");
-      Turtle turtle = state.getTurtleState();
-      FractalValue angleVal = form.visit(this, state);
+      System.out.print(form);
+      FractalValue angleVal = form.getAngle().visit(this, state);
       double angle = angleVal.realValue();
-      turtle.deriveTurned(angle);
+      state.getTurtleState().turn(angle);
       return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTTCmdForward(ASTTCmdForward form, FractalState state) throws FractalException {
-      System.out.println("Forward");
+      System.out.print(form);
       FractalValue distVal = form.getLength().visit(this, state);
       Double dist = distVal.realValue() * state.getDefaultScale();
       state.getTurtleState().displace(dist);
@@ -196,7 +197,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTTCmdBack(ASTTCmdBack form, FractalState state) throws FractalException {
-      System.out.println("Back");
+      System.out.print(form);
       FractalValue distVal = form.getLength().visit(this, state);
       Double dist = distVal.realValue() * state.getDefaultScale();
       state.getTurtleState().displace(-1 * dist);
@@ -205,38 +206,35 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTTCmdPenDown(ASTTCmdPenDown form, FractalState state) throws FractalException {
-      System.out.println("Pendown");
-      Turtle turtle = state.getTurtleState();
-      state.setTurtleState(new Turtle(turtle.getX(), turtle.getY(), turtle.getBearingInDegs(), true));
+      System.out.print(form);
+      state.getTurtleState().setPenDown(true);
       return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTTCmdPenUp(ASTTCmdPenUp form, FractalState state) throws FractalException {
-      System.out.println("Penup");
-      Turtle turtle = state.getTurtleState();
-      state.setTurtleState(new Turtle(turtle.getX(), turtle.getY(), turtle.getBearingInDegs(), true));
+      System.out.print(form);
+      state.getTurtleState().setPenDown(false);
       return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTTCmdClear(ASTTCmdClear form, FractalState state) throws FractalException {
-      System.out.println("Clear");
+      System.out.print(form);
       state.getDisplay().clear();
       return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTTCmdHome(ASTTCmdHome form, FractalState state) throws FractalException {
-      System.out.println("Home");
-      Turtle turtle = state.getTurtleState();
-      turtle.home();
+      System.out.print(form);
+      state.getTurtleState().home();
       return FractalValue.NO_VALUE;
     }
 
     @Override
     public FractalValue visitASTExpAdd(ASTExpAdd form, FractalState state) throws FractalException {
-      System.out.println("Add");
+      System.out.print(form);
       FractalValue first = form.getFirst().visit(this, state);
       FractalValue second = form.getSecond().visit(this, state);
       return first.add(second);
@@ -244,7 +242,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTExpSub(ASTExpSub form, FractalState state) throws FractalException {
-      System.out.println("Sub");
+      System.out.print(form);
       FractalValue first = form.getFirst().visit(this, state);
       FractalValue second = form.getSecond().visit(this, state);
       return first.sub(second);
@@ -252,7 +250,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTExpMul(ASTExpMul form, FractalState state) throws FractalException {
-      System.out.println("Mul");
+      System.out.print(form);
       FractalValue first = form.getFirst().visit(this, state);
       FractalValue second = form.getSecond().visit(this, state);
       return first.mul(second);
@@ -260,7 +258,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTExpDiv(ASTExpDiv form, FractalState state) throws FractalException {
-      System.out.println("Div");
+      System.out.print(form);
       FractalValue first = form.getFirst().visit(this, state);
       FractalValue second = form.getSecond().visit(this, state);
       return first.div(second);
@@ -268,7 +266,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTExpMod(ASTExpMod form, FractalState state) throws FractalException {
-      System.out.println("Mod");
+      System.out.print(form);
       FractalValue first = form.getFirst().visit(this, state);
       FractalValue second = form.getSecond().visit(this, state);
       return first.mod(second);
@@ -276,13 +274,13 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
 
     @Override
     public FractalValue visitASTExpLit(ASTExpLit form, FractalState state) throws FractalException {
-      System.out.println("Lit");
+      System.out.print(form);
       return form.getValue();
     }
 
     @Override
     public FractalValue visitASTExpVar(ASTExpVar form, FractalState state) throws FractalException {
-      System.out.println("Var");
+      System.out.print(form);
       Environment current = state.getEnvironment();
       return current.get(form.getVar());
     }

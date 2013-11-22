@@ -79,7 +79,6 @@ validComment = [^\r\n]
  
 <YYINITIAL> "," {return new Symbol(sym.COMMA);}
  
- 
 <YYINITIAL> "forward"|"fd"  {return new Symbol(sym.FORWARD);}
 <YYINITIAL> "back"|"bk"   {return new Symbol(sym.BACK);}
 <YYINITIAL> "left"|"lt"   {return new Symbol(sym.LEFT);}
@@ -88,7 +87,6 @@ validComment = [^\r\n]
 <YYINITIAL> "pendown"|"pd"  {return new Symbol(sym.PENDOWN);}
 <YYINITIAL> "home"    {return new Symbol(sym.HOME);}
 <YYINITIAL> "clear"   {return new Symbol(sym.CLEAR);}
- 
  
 <YYINITIAL> "render"  {return new Symbol(sym.RENDER);}
 <YYINITIAL> "["   {return new Symbol(sym.LBRACE);}
@@ -99,11 +97,8 @@ validComment = [^\r\n]
 <YYINITIAL> "restore" {return new Symbol(sym.RESTORE);}
 <YYINITIAL> "def"   {return new Symbol(sym.DEF);}
 <YYINITIAL> "self"    {return new Symbol(sym.SELF);}
- 
- 
 <YYINITIAL> "fractal" {return new Symbol(sym.FRACTAL);}
 <YYINITIAL> "end"   {return new Symbol(sym.END);}
- 
  
 <YYINITIAL>    {num}+ {
          // INTEGER

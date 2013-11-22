@@ -70,12 +70,12 @@ nonterminal ASTStatement stmt;
 nonterminal ASTDefine definition;
 nonterminal ASTTurtleCmd turtleCmd;
 nonterminal ArrayList<ASTStatement> fracBody;
-nonterminal ASTFracExp fracExp;
+nonterminal ASTStatement fracExp;
 nonterminal ASTExp arithExp;
 nonterminal ASTExp term;
 nonterminal ASTExp factor;
 nonterminal ASTFracVar fracVar;
-nonterminal ASTFracExp fractal;
+nonterminal ASTFractal fractal;
  
 /* Statements */
 nonterminal ASTSaveStmt saveStmt;
@@ -86,16 +86,16 @@ nonterminal ASTSetScale scaleStmt;
 /* Commands */
 nonterminal ASTSelf self;
 nonterminal ASTTCmdRight rightCmd;
-nonterminal ASTTurtleCmd leftCmd;
+nonterminal ASTTCmdLeft leftCmd;
  
 /* Statements */
 nonterminal ASTRender renderStmt;
-nonterminal ASTTurtleCmd pendownCmd;
-nonterminal ASTTurtleCmd penupCmd;
-nonterminal ASTTurtleCmd homeCmd;
-nonterminal ASTTurtleCmd backCmd;
-nonterminal ASTTurtleCmd forwardCmd;
-nonterminal ASTTurtleCmd clearCmd;
+nonterminal ASTTCmdPenDown pendownCmd;
+nonterminal ASTTCmdPenUp penupCmd;
+nonterminal ASTTCmdHome homeCmd;
+nonterminal ASTTCmdBack backCmd;
+nonterminal ASTTCmdForward forwardCmd;
+nonterminal ASTTCmdClear clearCmd;
  
 
 program ::= stmtList:s {: RESULT = new ASTProgram(s); :};
@@ -106,9 +106,9 @@ stmtList ::= stmtList:lst stmt:s {:
              :} |
              stmt:s {: RESULT = new ASTStmtSequence(s); :};
  
-stmt ::= definition | turtleCmd | fractal
-         restoreStmt | saveStmt |  levelStmt
-         scaleStmt | fracVar | renderStmt;
+stmt ::= definition:d {: RESULT = d; :}| turtleCmd:t {: RESULT = t; :}| fractal:fr {: RESULT = fr; :}
+         restoreStmt:rst {: RESULT = rst; :}| saveStmt:sv {: RESULT = sv; :} |  levelStmt:ls {: RESULT = ls; :}
+         scaleStmt:ss {: RESULT = ss; :} | renderStmt:rs {: RESULT = rs; :};
 
 restoreStmt ::= RESTORE {: RESULT = new ASTRestoreStmt(); :}; 
 
@@ -136,11 +136,11 @@ fracBody ::= fracExp:f fracBody:b {:
                  RESULT = body;
              :};
  
-turtleCmd ::= clearCmd | homeCmd | forwardCmd |
-              backCmd | penupCmd | pendownCmd | 
-              rightCmd | leftCmd;
+turtleCmd ::= clearCmd:cCmd {: RESULT = cCmd; :} | homeCmd:h {: RESULT = h; :} | forwardCmd:f {: RESULT = f; :} |
+              backCmd:b {: RESULT = b; :} | penupCmd:pu {: RESULT = pu; :} | pendownCmd:pd {: RESULT = pd; :} | 
+              rightCmd:r {: RESULT = r; :} | leftCmd:l {: RESULT = l; :};
 
-fracExp ::= self | stmt;
+fracExp ::= self:sf {: RESULT = sf; :} | stmt:sm {: RESULT = sm; :} | fracVar:f {: RESULT = f; :};
             
 fracVar ::= VARIABLE:v {: RESULT = new ASTFracVar(v); :};
  
