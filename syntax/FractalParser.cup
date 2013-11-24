@@ -116,9 +116,10 @@ saveStmt ::= SAVE {: RESULT = new ASTSaveStmt(); :};
 
 levelStmt ::= LEVEL arithExp:e {: RESULT = new ASTSetLevel(e); :};
  
-renderStmt ::= RENDER LBRACE arithExp:lvl COMMA arithExp:len RBRACE VARIABLE:v {:
-                  RESULT = new ASTRender(lvl, len, new ASTFracVar(v)); :} |
-              RENDER VARIABLE:v {: RESULT = new ASTRender(new ASTFracVar(v)); :};
+renderStmt ::= RENDER VARIABLE:v {: RESULT = new ASTRender(new ASTFracVar(v)); :} |
+               RENDER LBRACE arithExp:lvl COMMA arithExp:len RBRACE VARIABLE:v {:
+                  RESULT = new ASTRender(lvl, len, new ASTFracVar(v)); :};
+
 
 scaleStmt ::= SCALE arithExp:e {: RESULT = new ASTSetScale(e); :};
 

@@ -46,6 +46,8 @@ import fractal.values.Fractal;
  * @author newts
  */
 public class FractalEvaluator extends AbstractFractalEvaluator {
+  
+    private static ASTFracExp fracExp;
 
     @Override
     public FractalValue visitASTStmtSequence(ASTStmtSequence seq, FractalState state) throws FractalException {
@@ -84,7 +86,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
       System.out.print(form);
       ASTExp levelExp = form.getLevel();
       ASTExp scaleExp = form.getScale();
-      Fractal fractal = (Fractal)form.getFractal().visit(this, state);
+      Fractal fractal = form.getFractal().visit(this, state).fractalValue();
 
       double scale, oldScale;
       int level, oldLevel;
@@ -173,7 +175,24 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
     @Override
     public FractalValue visitASTSelf(ASTSelf form, FractalState state) throws FractalException {
       System.out.print(form);
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+              int level = state.getDefaultLevel();
+        double scale = state.getDefaultScale();
+        double length = form.getLength().visit(this, state).realValue();
+        
+        if(level == 0){
+                ASTTCmdForward forward = new ASTTCmdForward(form.getLength());
+                forward.visit(this, state);
+        }
+        else {
+                ASTRender render = new ASTRender(
+                                        new ASTExpLit(FractalValue.make(level-1)),
+                                        new ASTExpLit(FractalValue.make(scale * length)),
+                                        fracExp);
+                render.visit(this, state);
+        }
+        
+        
+        return FractalValue.NO_VALUE;
     }
 
     @Override
@@ -181,7 +200,7 @@ public class FractalEvaluator extends AbstractFractalEvaluator {
       System.out.print(form);
       FractalValue angleVal = form.getAngle().visit(this, state);
       double angle = angleVal.realValue();
-      state.getTurtleState().turn(-1 * angle);
+      state.getTurtleState().turn(180 - angle);
       return FractalValue.NO_VALUE;
     }
 
